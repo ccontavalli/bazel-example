@@ -1,0 +1,42 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_devserver")
+
+ts_devserver(
+    name = "devserver",
+
+    # The ts_devserver rules takes all the listed 'deps' and
+    # 'scripts' and appends them to the file specified in
+    # serving_path, /bundle.js from the web root.
+    #
+    # Note that it does not recursively resolve external dependencies,
+    # so if any one of the deps uses a node module, you must:
+    #   1) Map the included module to the web root of the dev server.
+    #   2) Update the index.html file to include the dependency.
+    #
+    # TODO: figure out a way so we don't have to do this manually.
+    #       Create a rollup rule to depend on? pkg_web? a custom rule?
+    #       Define a global with the list of dependencies?
+    deps = ["//frontend:main"],
+    serving_path = "/bundle.js",
+
+    # Any path mapped here is exposed directly in the root
+    # of the test web server.
+    additional_root_paths = [
+        "npm/node_modules/react/umd",
+        "npm/node_modules/react-dom/umd",
+        "react_samples/src/styles",
+    ],
+
+    # This is the name of the module to be loaded to serve the page
+    # among all the dependencies listed. It is basically the name
+    # of the .{ts,js,tsx} file without extension, relative to the
+    # root of the project ("frontend/main") with the name of the
+    # workspace prepended (see //WORKSPACE.bazel file).
+    entry_module = "scratch/frontend/main",
+
+    # Additional files to map in the root of the web server.
+    static_files = [
+        ":index.html",
+    ],
+)

@@ -1,0 +1,28 @@
+<html>
+  <!-- This file is served as the main index.html file of the :devserver file
+       (eg, http://127.0.0.1:5432/) serves this file.
+
+       Whenever a new external dependency is introduced in the main application,
+       you need to: 1) update the :devserver target in the BUILD.bazel file to
+       serve the dependency from the web root, and 2) add the necessary require
+       statements in this file. -->
+  <body>
+    <main id="root"></main>
+
+    <script src="/bundle.js"></script>
+    <link href="styles.css" rel="stylesheet" />
+    <script>
+      // Both react and react-dom are compiled into multiple flavors (minified, non-minified,
+      // with test utils, without, ...).
+      //
+      // The use of require.config with an object allows us to map the name imported
+      // by our code to the specific javascript file. Eg, when 'react' is required by
+      // our code, the 'react.development.js' file will be loaded.
+      //
+      // This works in conjunction with the static_paths attribute for ts_devserver,
+      // which maps @npm/node_modules/react/umd/ in the root of the dev server.
+      require.config({paths: {"react-dom": "react-dom.development"}});
+      require.config({paths: {react: "react.development"}});
+    </script>
+  </body>
+</html>
