@@ -191,7 +191,7 @@ by Brendan Ryan (thanks).
 
 In short:
 
-1. Added the `golang` tooling to the `WORKSPACE.bazel` file. The blog post above provides
+1. Add the `golang` tooling to the `WORKSPACE.bazel` file. The blog post above provides
    a blob to cut and paste similar to the one below. DO NOT COPY IT. Instead, go on the
    [bazel golang repository](https://github.com/bazelbuild/rules_go/releases), and copy the recommended latest version.
 
@@ -211,9 +211,10 @@ In short:
     go_rules_dependencies()
     go_register_toolchains()
 
-2. Next, I configured `gazelle`. It is a tool that allows to automatically maintain
-   `BUILD.bazel` files based on the content of go files. Followed the [instructions here](https://github.com/bazelbuild/bazel-gazelle#running-gazelle-with-bazel), which
-   resulted in adding to `WORKSPACE.bazel`:
+2. Next, configure `gazelle`. It is a tool that allows to automatically maintain
+   `BUILD.bazel` files based on the content of go files. You don't want to do this manually.
+   Follow the [instructions here](https://github.com/bazelbuild/bazel-gazelle#running-gazelle-with-bazel), which
+   will result in adding to `WORKSPACE.bazel`:
 
 
     http_archive(
@@ -228,14 +229,20 @@ In short:
     load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
     gazelle_dependencies()
 
-3. Add `gazelle` as a buildable tool in the top level `BUILD.bazel` file:
+3. Add `gazelle` as a buildable tool in the top level `BUILD.bazel` file. The important part here
+   is to costumize the comment just before the `gazelle(...)` rule, as it tells gazelle how your
+   own golang code will be referenced in import statements. To be clear, let's say in the `backend`
+   directory you have a `lib` subdirectory. To import that code, you would normally have something like `import "github.com/whatever/backend/lib"`.
+   The `#prefix` you have to provide gazelle - which can be any arbitrary string - is this `github.com/whatever`.
+   Basically, it tells gazelle "really, anything my go code tries to import that starts with github.com/whatever comes
+   from this same directory, no need to download it. For example, for this repository, we'd have:
 
 
     load("@bazel_gazelle//:def.bzl", "gazelle")
-    # gazelle:prefix github.com/example/project
+    # gazelle:prefix github.com/ccontavalli/bazel-example
     gazelle(name = "gazelle")
 
-4. Finally, tested the setup, by running:
+4. Finally, test the setup by running:
 
 
     bazel run //:gazelle
@@ -247,6 +254,46 @@ that bazel was able to compile a golang binary, and run it.
 workspace file is named `WORKSPACE.bazel` (default used by `yarn create @bazel`)
 instead of just `WORKSPACE`. See [the issue filed on github](https://github.com/bazelbuild/bazel-gazelle/issues/678).
 The fix is simple: rename WORKSPACE.bazel in WORKSPACE, with `mv WORKSPACE.bazel WORKSPACE`.
+
+## Writing and running some go code
+
+It's really easy: just write go code as usual, run `gazelle`, and call it a day.
+
+If you look in this repository:
+
+1. I started by creating `backend/main.go`, like any other golang main.
+2. I added an example library, `backend/lib/library.go`, exporting just the `MyLog` function.
+3. Run gazelle, with `bazel run //:gazelle`. This created the `BUILD.bazel` files for me.
+4. Minimally edited the BUILD.bazel files to have sensible names for the BUILD rules.
+   For example, in `backend/lib/BUILD.bazel` I gave the generated rule name the name `lib`,
+   while in `backend/BUILD.bazel`, I renamed the `go_binary` target to be named `backend`.
+5. As you edit and update your code, just re-run `gazelle` as necessary to update your
+   BUILD files. It will even automatically add tests for you.
+
+With the minimal work here, I can now:
+
+- run `bazel build backend` or `bazel run backend` to build and start my backend, which
+  will start listening on [http://127.0.0.1:5432/](http://127.0.0.1:5432/).
+- run `bazel build backend/lib` to just build the library.
+- run `bazel test ...:all` and get the golang tests run as well as all the other tests.
+
+## External dependencies in your go code
+
+gazelle and bazel can be used in combination with [go modules](https://blog.golang.org/using-go-modules),
+which is generally recommended, although they work slightly differently. To start using them:
+
+1. `go mod init github.com/ccontavalli/bazel-example` will create a `go.mod` file.
+2. Every time you need an external dependency, run `go get github.com/whatever` to install it.
+   This will update the `go.mod` file and the `go.sum` file.
+3. Run `bazel run //:gazelle -- update-repos -from_file=go.mod` to have the dependency tracked by bazel.
+4. Keep coding as usual, repeat as necessary.
+
+The difference here is that all the dependencies your code need will be downloaded and tracked by
+bazel. Any external dependency not tracked will cause a build failure, easy to fix - regardless of
+what is already installed on your machine.
+
+Further, bazel will track the exact version and hash of each dependency, making your build
+hermetic and easy to run in the cloud.
 
 ### END
 
@@ -282,11 +329,4 @@ yarn add --dev @bazel/rollup
 yarn add --dev rollup
 
 alternatives:
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
 https://github.com/zenclabs/bazel-javascript

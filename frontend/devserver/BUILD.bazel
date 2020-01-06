@@ -33,7 +33,7 @@ ts_devserver(
     # of the .{ts,js,tsx} file without extension, relative to the
     # root of the project ("frontend/main") with the name of the
     # workspace prepended (see //WORKSPACE.bazel file).
-    entry_module = "scratch/frontend/main",
+    entry_module = "example/frontend/main",
 
     # Additional files to map in the root of the web server.
     static_files = [
