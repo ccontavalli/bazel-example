@@ -3,22 +3,25 @@ package(default_visibility = ["//visibility:public"])
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_rollup//:index.bzl", "rollup_bundle")
 
-# When bazel is invoked with 'bazel build directoryname' without specifying 
+# When bazel is invoked with 'bazel build directoryname' without specifying
 # any target, it looks for the target 'directoryname', as if it was invoked
 # like 'bazel build directoryname:directoryname'.
 #
 # This alias causes the 'release' target to be built when no target is explicitly
 # specified by the user.
-alias(name = "frontend", actual = ":release")
+alias(
+    name = "frontend",
+    actual = ":release",
+)
 
 # This is the main library, with the application code.
 ts_library(
     name = "app",
     srcs = ["main.tsx"],
     deps = [
-       "@npm//react",
-       "@npm//react-dom",
-    ]
+        "@npm//react",
+        "@npm//react-dom",
+    ],
 )
 
 # Generates the file dist/bin/frontend/release.js by running rollupjs

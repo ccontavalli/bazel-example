@@ -182,6 +182,72 @@ defining a dependency on the previous `app` target.
 Running `bazel run frontend/devserver` will result in a web server starting on
 port `5432` and reachable via http://127.0.0.1:5432/ running the "Hello World" example.
 
+# Creating a golang backend
+
+## Setup
+
+For the `bazel` setup for `golang` I started from [this blog post](https://brendanjryan.com/golang/bazel/2018/05/12/building-go-applications-with-bazel.html),
+by Brendan Ryan (thanks).
+
+In short:
+
+1. Added the `golang` tooling to the `WORKSPACE.bazel` file. The blog post above provides
+   a blob to cut and paste similar to the one below. DO NOT COPY IT. Instead, go on the
+   [bazel golang repository](https://github.com/bazelbuild/rules_go/releases), and copy the recommended latest version.
+
+
+    # DO NOT COPY THIS FROM HERE. Go to https://github.com/bazelbuild/rules_go/releases AND COPY THE LATEST VERSION.
+    http_archive(
+        name = "io_bazel_rules_go",
+        urls = [
+            "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
+            "https://github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
+        ],
+        sha256 = "e88471aea3a3a4f19ec1310a55ba94772d087e9ce46e41ae38ecebe17935de7b",
+    )
+
+    load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+
+    go_rules_dependencies()
+    go_register_toolchains()
+
+2. Next, I configured `gazelle`. It is a tool that allows to automatically maintain
+   `BUILD.bazel` files based on the content of go files. Followed the [instructions here](https://github.com/bazelbuild/bazel-gazelle#running-gazelle-with-bazel), which
+   resulted in adding to `WORKSPACE.bazel`:
+
+
+    http_archive(
+        name = "bazel_gazelle",
+        urls = [
+            "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
+        ],
+        sha256 = "86c6d481b3f7aedc1d60c1c211c6f76da282ae197c3b3160f54bd3a8f847896f",
+    )
+
+    load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
+    gazelle_dependencies()
+
+3. Add `gazelle` as a buildable tool in the top level `BUILD.bazel` file:
+
+
+    load("@bazel_gazelle//:def.bzl", "gazelle")
+    # gazelle:prefix github.com/example/project
+    gazelle(name = "gazelle")
+
+4. Finally, tested the setup, by running:
+
+
+    bazel run //:gazelle
+
+Given that gazelle is itself written in go, being able to run it means
+that bazel was able to compile a golang binary, and run it.
+
+**IMPORTANT**: as of January 5th, 2020, gazelle will fail to run if the
+workspace file is named `WORKSPACE.bazel` (default used by `yarn create @bazel`)
+instead of just `WORKSPACE`. See [the issue filed on github](https://github.com/bazelbuild/bazel-gazelle/issues/678).
+The fix is simple: rename WORKSPACE.bazel in WORKSPACE, with `mv WORKSPACE.bazel WORKSPACE`.
+
 ### END
 
 If you get strange errors related to yarn.lock file or packages.lock
@@ -216,6 +282,7 @@ yarn add --dev @bazel/rollup
 yarn add --dev rollup
 
 alternatives:
+https://github.com/zenclabs/bazel-javascript
 https://github.com/zenclabs/bazel-javascript
 https://github.com/zenclabs/bazel-javascript
 https://github.com/zenclabs/bazel-javascript
