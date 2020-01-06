@@ -17,7 +17,7 @@ ts_devserver(
     # TODO: figure out a way so we don't have to do this manually.
     #       Create a rollup rule to depend on? pkg_web? a custom rule?
     #       Define a global with the list of dependencies?
-    deps = ["//frontend:main"],
+    deps = ["//frontend:app"],
     serving_path = "/bundle.js",
 
     # Any path mapped here is exposed directly in the root

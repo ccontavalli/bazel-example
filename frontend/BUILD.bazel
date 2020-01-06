@@ -11,8 +11,9 @@ load("@npm_bazel_rollup//:index.bzl", "rollup_bundle")
 # specified by the user.
 alias(name = "frontend", actual = ":release")
 
+# This is the main library, with the application code.
 ts_library(
-    name = "main",
+    name = "app",
     srcs = ["main.tsx"],
     deps = [
        "@npm//react",
@@ -25,7 +26,13 @@ ts_library(
 # configuration file.
 rollup_bundle(
     name = "release",
-    deps = [":main"],
+    deps = [":app"],
+    # rollup configuration file to use.
     config_file = "rollup.config.js",
+
+    # typescript to execute once the created bundle is loaded by the browser.
+    # This is necessary as the bundle will certainly contain more than one .ts/.tsx/.js
+    # file, and just results in the equivalent of a 'require main' as one of the last
+    # lines of the created bundle.
     entry_point = "main.tsx",
 )
