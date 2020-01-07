@@ -1,20 +1,36 @@
 load("@io_bazel_rules_go//extras:embed_data.bzl", "go_embed_data")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "pkg_web")
 
-go_library(
-    name = "assets",
-    srcs = [":data"],
-    importpath = "github.com/ccontavalli/bazel-example/backend/assets",
-    visibility = ["//visibility:public"],
-)
-
-go_embed_data(
+# Move all the web assets in one place.
+pkg_web(
     name = "data",
-    package = "assets",
+    # Strip the frontend directory, so release.js ends up
+    # in the root, rather than a subdirectory frontend/release.js.
+    additional_root_paths = [
+    	"frontend"
+    ],
     srcs = [
         "favicon.ico",
         "index.html",
 	"//frontend:release",
-    ],
+    ]
+)
+
+# Generate a .go file containing all the srcs, the assets,
+# as strings in the .go file itself.
+go_embed_data(
+    name = "embedded",
+    package = "assets",
+    srcs = [":data"],
+    visibility = ["//visibility:public"],
+)
+
+# Create a .go library containing the source file generated
+# by the go_embed_data target.
+go_library(
+    name = "assets",
+    srcs = [":embedded"],
+    importpath = "github.com/ccontavalli/bazel-example/backend/assets",
     visibility = ["//visibility:public"],
 )

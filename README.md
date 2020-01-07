@@ -182,6 +182,10 @@ defining a dependency on the previous `app` target.
 Running `bazel run frontend/devserver` will result in a web server starting on
 port `5432` and reachable via http://127.0.0.1:5432/ running the "Hello World" example.
 
+This devserver is created with the [ts_devserver rule](https://bazelbuild.github.io/rules_nodejs/TypeScript.html#serving-typescript-for-development)
+look at the `BUILD.bazel` file and the link above for more details, but it's pretty
+trivial to setup.
+
 # Creating a golang backend
 
 ## Setup
@@ -361,7 +365,77 @@ simple. In our `backend/assets/BUILD.bazel`, all we have to do is modify the
 If you now run `bazel run frontend`, you will notice the longer build time,
 and the fact that frontend dependencies are built and linked in.
 
-### END
+And of course, the frontend will start listening and serving on [http://127.0.0.1:5432/](http://127.0.0.1:5432/).
+
+## Including more assets
+
+One thing that is annoying with `go_embed_data` is that the files are imported with weird
+paths. Basically, `favicon.ico` and `index.html` will be accessible just by name, while `//frontend:release`
+will be accessible by the full path, like `dist/bin/frontend/release.js`.
+
+To mitigate the necessary path guessing and mangling, you can, well, do something else.
+Not use `go_embed_data`, maybe create a docker image containing the files in a directory, or a .tar.gz, all easy to do with bazel.
+
+I personally like embedding assets directly into the binary, so it is self contained,
+easy to deploy and run even without docker. Another approach you can use is to have
+bazel copy all the assets in one place, and only the use `go_embed_data`.
+
+One way to do so is by using the `pkg_web` rule, provided with the nodejs ruleset. You
+can check the `backend/assets/BUILD.bazel` file, but in short, you will end up with
+something like:
+
+    # Move all the assets in one place.
+    pkg_web(
+        name = "data",
+        additional_root_paths = [
+            "frontend"
+        ],
+        srcs = [
+            "favicon.ico",
+            "index.html",
+            "//frontend:release",
+        ]
+    )
+
+    # Generate a .go file containing all the assets as
+    # go strings in the Data map.
+    go_embed_data(
+        name = "embedded",
+        package = "assets",
+        srcs = [":data"],
+        visibility = ["//visibility:public"],
+    )
+
+    # Create a .go library containing the source file generated
+    # by the go_embed_data target.
+    go_library(
+        name = "assets",
+        srcs = [":embedded"],
+        importpath = "github.com/ccontavalli/bazel-example/backend/assets",
+        visibility = ["//visibility:public"],
+    )
+
+## Seeing the hello world in your new backend
+
+# Importing material-ui
+
+TODO
+
+# Using SASS
+
+TODO
+
+# Using protocol buffers instead of json
+
+TODO
+
+# Writing and running unit tests
+
+TODO
+
+# Pulling it all together
+
+# Conclusions
 
 If you get strange errors related to yarn.lock file or packages.lock
 or end up in situations where the behavior is inconsistent with what you
@@ -372,31 +446,3 @@ would expect, run:
 
 This will clean some of the internal bazel state, and start all the
 next builds from scratch.
-
-Followed instructions here to setup a ts_devserver:
-https://bazelbuild.github.io/rules_nodejs/TypeScript.html#serving-typescript-for-development
-
-From a directory outside my repository installed ibazel globally:
-
-yarn add -D @bazel/ibazel
-yarn global add @bazel/ibazel
-
-Verified that the path used by npm is in my `$PATH`:
-
-    $ yarn global bin
-    /home/ccontavalli/.nvm/versions/node/v12.14.0/bin
-
-bazel run @nodejs//:yarn -- add react
-
-yarn add react
-yarn add react-dom
-
-yarn add --dev @bazel/rollup
-yarn add --dev rollup
-
-alternatives:
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
-https://github.com/zenclabs/bazel-javascript
