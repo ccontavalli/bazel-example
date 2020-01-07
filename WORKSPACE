@@ -93,9 +93,6 @@ load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 gazelle_dependencies()
 
-go_repository(
-    name = "com_github_ccontavalli_goutils",
-    importpath = "github.com/ccontavalli/goutils",
-    sum = "h1:VXFEkvL54HR3Uriy+q+IRj66McfiASmPMBJ+veZwgpc=",
-    version = "v0.0.0-20190304205437-20f9d5d3e2fa",
-)
+load("@io_bazel_rules_go//extras:embed_data_deps.bzl", "go_embed_data_dependencies")
+
+go_embed_data_dependencies()

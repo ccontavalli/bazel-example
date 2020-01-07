@@ -295,6 +295,72 @@ what is already installed on your machine.
 Further, bazel will track the exact version and hash of each dependency, making your build
 hermetic and easy to run in the cloud.
 
+## Including assets in our backend
+
+Let's say our golang backend needs to be able to serve our static frontend file, plus a number
+of other assets. What I did in this repository:
+
+1. Generate all the assets in the `backend/assets` directory, using `BUILD.bazel` rules.
+2. Include those dependencies in the generated golang binary by using a `go_embed_data` rule.
+
+[go_embed_data](https://github.com/bazelbuild/rules_go/blob/master/go/extras.rst#id3) is pretty darn simple: takes a list of input files - whatever they are - and
+turns them into a go file you can just `import` from your code.
+through a variable in that library.
+
+For example, with:
+
+    go_embed_data(
+        name = "data",
+        package = "assets",
+        srcs = [
+          "index.html",
+          "favicon.ico",
+        ],
+    )
+
+a `.go` file containing `index.html` and `favicon.ico` is created. To use it, we
+need to include it in a library, for example, with:
+
+    go_library(
+        name = "assets",
+        srcs = [":data"],
+        importpath = "github.com/ccontavalli/bazel-example/backend/assets",
+        visibility = ["//visibility:public"],
+    )
+
+From the go code, we can access the content of those files with:
+
+    import "github.com/ccontavalli/backend/assets"
+    ...
+    log.Printf("index.html: %s", string(assets.Data["index.html"]))
+    ...
+
+And we can build the code after running the usual `bazel run //:gazelle` as
+we were before with `bazel build backend` and `bazel run backend`.
+
+In our go code, `assets.Data` will be a `map` using the path of the input file as key, and
+returning the content as a `[]byte`, array of bytes.
+
+## Including our react application as an asset
+
+Including the `release.js` file generated from `frontend/BUILD.bazel` is relatively
+simple. In our `backend/assets/BUILD.bazel`, all we have to do is modify the
+`go_embed_data` to have:
+
+    go_embed_data(
+        name = "data",
+        package = "assets",
+        srcs = [
+            "favicon.ico",
+            "index.html",
+            "//frontend:release",
+        ],
+        visibility = ["//visibility:public"],
+    )
+
+If you now run `bazel run frontend`, you will notice the longer build time,
+and the fact that frontend dependencies are built and linked in.
+
 ### END
 
 If you get strange errors related to yarn.lock file or packages.lock
@@ -329,4 +395,8 @@ yarn add --dev @bazel/rollup
 yarn add --dev rollup
 
 alternatives:
+https://github.com/zenclabs/bazel-javascript
+https://github.com/zenclabs/bazel-javascript
+https://github.com/zenclabs/bazel-javascript
+https://github.com/zenclabs/bazel-javascript
 https://github.com/zenclabs/bazel-javascript

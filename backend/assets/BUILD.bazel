@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//extras:embed_data.bzl", "go_embed_data")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "assets",
+    srcs = [":data"],
+    importpath = "github.com/ccontavalli/bazel-example/backend/assets",
+    visibility = ["//visibility:public"],
+)
+
+go_embed_data(
+    name = "data",
+    package = "assets",
+    srcs = [
+        "favicon.ico",
+        "index.html",
+	"//frontend:release",
+    ],
+    visibility = ["//visibility:public"],
+)
