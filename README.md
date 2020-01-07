@@ -200,20 +200,20 @@ In short:
    [bazel golang repository](https://github.com/bazelbuild/rules_go/releases), and copy the recommended latest version.
 
 
-    # DO NOT COPY THIS FROM HERE. Go to https://github.com/bazelbuild/rules_go/releases AND COPY THE LATEST VERSION.
-    http_archive(
-        name = "io_bazel_rules_go",
-        urls = [
-            "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
-            "https://github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
-        ],
-        sha256 = "e88471aea3a3a4f19ec1310a55ba94772d087e9ce46e41ae38ecebe17935de7b",
-    )
+       # DO NOT COPY THIS FROM HERE. Go to https://github.com/bazelbuild/rules_go/releases AND COPY THE LATEST VERSION.
+       http_archive(
+           name = "io_bazel_rules_go",
+           urls = [
+               "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
+               "https://github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
+           ],
+           sha256 = "e88471aea3a3a4f19ec1310a55ba94772d087e9ce46e41ae38ecebe17935de7b",
+       )
 
-    load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+       load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
 
-    go_rules_dependencies()
-    go_register_toolchains()
+       go_rules_dependencies()
+       go_register_toolchains()
 
 2. Next, configure `gazelle`. It is a tool that allows to automatically maintain
    `BUILD.bazel` files based on the content of go files. You don't want to do this manually.
@@ -221,17 +221,17 @@ In short:
    will result in adding to `WORKSPACE.bazel`:
 
 
-    http_archive(
-        name = "bazel_gazelle",
-        urls = [
-            "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
-            "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
-        ],
-        sha256 = "86c6d481b3f7aedc1d60c1c211c6f76da282ae197c3b3160f54bd3a8f847896f",
-    )
+       http_archive(
+           name = "bazel_gazelle",
+           urls = [
+               "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
+               "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
+           ],
+           sha256 = "86c6d481b3f7aedc1d60c1c211c6f76da282ae197c3b3160f54bd3a8f847896f",
+       )
 
-    load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
-    gazelle_dependencies()
+       load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
+       gazelle_dependencies()
 
 3. Add `gazelle` as a buildable tool in the top level `BUILD.bazel` file. The important part here
    is to costumize the comment just before the `gazelle(...)` rule, as it tells gazelle how your
@@ -242,14 +242,13 @@ In short:
    from this same directory, no need to download it. For example, for this repository, we'd have:
 
 
-    load("@bazel_gazelle//:def.bzl", "gazelle")
-    # gazelle:prefix github.com/ccontavalli/bazel-example
-    gazelle(name = "gazelle")
+       load("@bazel_gazelle//:def.bzl", "gazelle")
+       # gazelle:prefix github.com/ccontavalli/bazel-example
+       gazelle(name = "gazelle")
 
 4. Finally, test the setup by running:
 
-
-    bazel run //:gazelle
+   bazel run //:gazelle
 
 Given that gazelle is itself written in go, being able to run it means
 that bazel was able to compile a golang binary, and run it.
