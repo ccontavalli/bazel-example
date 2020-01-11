@@ -276,7 +276,7 @@ If you look in this repository:
 With the minimal work here, I can now:
 
 - run `bazel build backend` or `bazel run backend` to build and start my backend, which
-  will start listening on [http://127.0.0.1:5432/](http://127.0.0.1:5432/).
+  will start listening on [http://127.0.0.1:5433/](http://127.0.0.1:5433/).
 - run `bazel build backend/lib` to just build the library.
 - run `bazel test ...:all` and get the golang tests run as well as all the other tests.
 

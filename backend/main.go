@@ -13,12 +13,12 @@ import (
 
 func main() {
     http.HandleFunc("/", HelloServer)
-    log.Printf("Opening port 5432 - will be available at http://127.0.0.1:5432/")
+    log.Printf("Opening port 5433 - will be available at http://127.0.0.1:5433/")
     log.Printf("Serving assets:")
     for key, data := range assets.Data {
       log.Printf("  - %s - %d bytes", key, len(data))
     }
-    err := http.ListenAndServe(":5432", nil)
+    err := http.ListenAndServe(":5433", nil)
     log.Printf("Listen returned error - %v", err)
 }
 
